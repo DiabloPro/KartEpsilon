@@ -143,9 +143,9 @@ end)
 
 local regionColor = localPlayerVisuals:createToggle("Region Color", function(boolean)
     if boolean then
-        game.Lighting.regionColor.Enabled = false
+        game.Lighting.RegionColor.Enabled = false
     else
-        game.Lighting.regionColor.Enabled = true
+        game.Lighting.RegionColor.Enabled = true
     end
 end)
 
