@@ -70,6 +70,18 @@ local humanoidTab = screenGUI:createTab("http://www.roblox.com/asset/?id=9827813
 
 local localPlayerSection = humanoidTab:createSection("Local Player")
 
+local function setWalkSpeed()
+    if connections.speedEvent then
+        connections.speedEvent:Disconnect()
+    end
+    connections.speedEvent = player.Character.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if settings.speedToggle then
+            player.Character.Humanoid.WalkSpeed = settings.WalkSpeed
+            player.Character.Stats.WalkSpeed.Value = settings.WalkSpeed
+        end
+    end)
+end
+
 local toggleSpeed = localPlayerSection:createToggle("Walk Speed", function(boolean)
     settings.speedToggle = boolean
     if not settings.speedToggle then
@@ -80,19 +92,14 @@ local toggleSpeed = localPlayerSection:createToggle("Walk Speed", function(boole
         else
             player.Character.Stats.WalkSpeed.Value = 20
         end
+    else
+        setWalkSpeed()
     end
 end)
 
-toggleSpeed:createSlider({0,80}, 20, false, function(value)
-    if connections.speedEvent then
-        connections.speedEvent:Disconnect()
-    end
-    connections.speedEvent = player.Character.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if settings.speedToggle then
-            player.Character.Humanoid.WalkSpeed = value
-            player.Character.Stats.WalkSpeed.Value = value
-        end
-    end)
+toggleSpeed:createSlider({0,80}, settings.speed, false, function(value)
+    settings.speed = value
+    setWalkSpeed()
 end)
 
 toggleSpeed:createBind(function(bind)
