@@ -123,7 +123,7 @@ resetOnDeath.toggleSpeed:createSlider({0,80}, settings.speed, false, function(va
 end)
 
 resetOnDeath.toggleSpeed:createBind(function(bind)
-    savedSettings.speedBind = bind
+    savedSettings.speedBind = bind or nil
 end)
 if savedSettings.speedBind then
     resetOnDeath.toggleSpeed:setBind(savedSettings.speedBind)
@@ -519,6 +519,10 @@ local modNotifier = visualMiscSection:createToggle("Mod Notifier", function(bool
         end
     end
 end)
+
+if savedSettings.modNotifier then
+    modNotifier:setToggle(savedSettings.modNotifier)
+end
 
 --leaderboard viewer
 local currentHover = {}
