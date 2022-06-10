@@ -1,17 +1,20 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/DiabloPro/UiLibrary/main/Main.lua"))()
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 local HttpService = game:GetService("HttpService")
 local Assets = game:GetObjects("rbxassetid://9839966208")[1]
 
 local screenGUI = Library.init("Kart's Epsilon 2")
 local player = game.Players.LocalPlayer
+local resetOnDeath = {}
 local settings = {
     speedToggle = false,
     speed = 20,
     viewHealthBars = false,
     viewManaBars = false,
     viewTools = false,
+    chatLogger = false,
 }
 local connections = {
     trinketEvent = nil,
@@ -23,10 +26,22 @@ local connections = {
     toolView = {},
     infiniteMana = nil,
     noFog = nil,
-    day = nil
+    day = nil,
+    manaHelp = {},
+    chatLogger = {},
 }
 local spellPrecentages = {
-    Gate = {}
+    Gate = {Normal = {.50, .80}},
+    Ignis = {Snap = {.45, .60}, Normal = {.75, 1}},
+    Gelidus = {Normal = {.80, 1}},
+    Viribus = {Snap = {.60, .75},Normal = {.25, .35}},
+    Telorum = {Normal = {.75, .95}},
+    Snarvindur = {Snap = {.10, .35},Normal = {.55, .75}},
+    Percutiens = {Snap = {.55, .75}, Normal = {.5, .75}},
+    Velo = {Snap = {.50, 1}, Normal = {.45, .65}},
+    Catena = {Normal = {.20, .70}},
+    Fimbulvetr = {Normal = {.60, .95}}
+
 }
 
 local defaultSettings = {
@@ -74,46 +89,50 @@ local function setWalkSpeed()
     if connections.speedEvent then
         connections.speedEvent:Disconnect()
     end
+    if settings.speedToggle then
+        player.Character.Humanoid.WalkSpeed = settings.speed
+        player.Character.Stats.WalkSpeed.Value = settings.speed
+    else
+        if game.ReplicatedStorage.Outfits[player.Data.Armor.Value] and game.ReplicatedStorage.Outfits[player.Data.Armor.Value].Stats:FindFirstChild("SpeedBoost") then
+            player.Character.Humanoid.WalkSpeed = 20 + game.ReplicatedStorage.Outfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
+            player.Character.Stats.WalkSpeed.Value = 20 + game.ReplicatedStorage.Outfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
+        elseif game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value] and game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value].Stats:FindFirstChild("SpeedBoost") then
+            player.Character.Humanoid.WalkSpeed = 20 + game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
+            player.Character.Stats.WalkSpeed.Value = 20 + game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
+        else
+            player.Character.Humanoid.WalkSpeed = 20
+            player.Character.Stats.WalkSpeed.Value = 20
+        end
+    end
     connections.speedEvent = player.Character.Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if settings.speedToggle then
-            player.Character.Humanoid.WalkSpeed = settings.WalkSpeed
-            player.Character.Stats.WalkSpeed.Value = settings.WalkSpeed
+            player.Character.Humanoid.WalkSpeed = settings.speed
+            player.Character.Stats.WalkSpeed.Value = settings.speed
         end
     end)
 end
 
-local toggleSpeed = localPlayerSection:createToggle("Walk Speed", function(boolean)
+resetOnDeath.toggleSpeed = localPlayerSection:createToggle("Walk Speed", function(boolean)
     settings.speedToggle = boolean
-    if not settings.speedToggle then
-        if game.ReplicatedStorage.Outfits[player.Data.Armor.Value] and game.ReplicatedStorage.Outfits[player.Data.Armor.Value].Stats:FindFirstChild("SpeedBoost") then
-            player.Character.Stats.WalkSpeed.Value = 20 + game.ReplicatedStorage.Outfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
-        elseif game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value] and game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value].Stats:FindFirstChild("SpeedBoost") then
-            player.Character.Stats.WalkSpeed.Value = 20 + game.ReplicatedStorage.OldOutfits[player.Data.Armor.Value].Stats.SpeedBoost.Value
-        else
-            player.Character.Stats.WalkSpeed.Value = 20
-        end
-    else
-        setWalkSpeed()
-    end
+    setWalkSpeed()
 end)
-
-toggleSpeed:createSlider({0,80}, settings.speed, false, function(value)
+resetOnDeath.toggleSpeed:createSlider({0,80}, settings.speed, false, function(value)
     settings.speed = value
     setWalkSpeed()
 end)
 
-toggleSpeed:createBind(function(bind)
-    savedSettings.speedBind = Enum.KeyCode[bind]
+resetOnDeath.toggleSpeed:createBind(function(bind)
+    savedSettings.speedBind = bind
 end)
-
 if savedSettings.speedBind then
-    toggleSpeed:setBind(savedSettings.speedBind)
+    resetOnDeath.toggleSpeed:setBind(savedSettings.speedBind)
 end
 
 
-local noFall = localPlayerSection:createToggle("No Fall", function(boolean)
+resetOnDeath.noFall = localPlayerSection:createToggle("No Fall", function(boolean)
     player.Character.FallDamage.Disabled = boolean
 end)
+-- visuals
 
 local localPlayerVisuals = humanoidTab:createSection("Visuals")
 
@@ -149,11 +168,20 @@ local regionColor = localPlayerVisuals:createToggle("Region Color", function(boo
     end
 end)
 
+local fullBright = localPlayerVisuals:createToggle("Full Bright", function(boolean)
+    if boolean then
+        game.Lighting.Ambient = Color3.fromRGB(255,255,255)
+    else
+        game.Lighting.Ambient = Color3.fromRGB(20,20,20)
+    end
+end)
 
 local manaSection = humanoidTab:createSection("Mana")
+local manaHelpGuis = {}
+local manaScreenGui
 local manaGui
 
-local manaPrecentage = manaSection:createToggle("Mana Precentage", function(boolean)
+resetOnDeath.manaPrecentage = manaSection:createToggle("Mana Precentage", function(boolean)
     if boolean then
         manaGui = Instance.new("ScreenGui")
         getParent(manaGui)
@@ -172,15 +200,82 @@ local manaPrecentage = manaSection:createToggle("Mana Precentage", function(bool
             manaGui.TextLabel.Text = math.floor(newValue).."%"
         end)
     else
-        connections.manaPrecent:Disconnect()
-        manaGui:Destroy()
+        if manaGui then
+            connections.manaPrecent:Disconnect()
+            manaGui:Destroy()
+        end
+    end
+end)
+
+local function CreateManaBarSection(Tool)
+    local Normal = Instance.new("Frame")
+    table.insert(manaHelpGuis, Normal)
+    Normal.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Normal[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+    Normal.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+    Normal.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+    Normal.BackgroundTransparency = 0.7
+    Normal.AnchorPoint = Vector2.new(0,1)
+    Normal.BorderSizePixel = 0
+    Normal.Parent = manaScreenGui
+    if spellPrecentages[Tool].Snap then
+        local Snap = Instance.new("Frame")
+        table.insert(manaHelpGuis, Snap)
+        Snap.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Snap[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+        Snap.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+        Snap.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        Snap.BackgroundTransparency = 0.7
+        Snap.AnchorPoint = Vector2.new(0,1)
+        Snap.BorderSizePixel = 0
+        Snap.Parent = manaScreenGui
+    end
+end
+
+resetOnDeath.manaHelp = manaSection:createToggle("Mana Helper", function(boolean)
+    if boolean then
+        manaScreenGui = Instance.new("ScreenGui")
+        getParent(manaScreenGui)
+        local tool = player.Character:FindFirstChildWhichIsA("Tool")
+        if tool then
+            if spellPrecentages[tool.Name] then
+                CreateManaBarSection(tool.Name)
+            end
+        end
+        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildAdded:Connect(function(child)
+            if child:IsA("Tool") and  spellPrecentages[child.Name] then
+                for i,v in pairs(manaHelpGuis) do
+                    v:Destroy()
+                end
+                CreateManaBarSection(child.Name)
+            end
+        end)
+
+        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildRemoved:Connect(function(child)
+            if child:IsA("Tool") then
+                for i,v in pairs(manaHelpGuis) do
+                    v:Destroy()
+                end
+            end
+        end)
+    else
+        if manaScreenGui then
+            manaScreenGui:Destroy()
+        end
+        for i,v in pairs(manaHelpGuis) do
+            v:Destroy()
+        end
+        for i,v in pairs(connections.manaHelp) do
+            if v.Connected then
+                v:Disconnect()
+            end
+            connections.manaHelp[i] = nil
+        end
     end
 end)
 -- trinkets
 local trinketTab = screenGUI:createTab("http://www.roblox.com/asset/?id=9830996211")
 local trinketSettingsSection = trinketTab:createSection("Trinket Settings")
 
-local AutoPickUp = trinketSettingsSection:createToggle("Auto Pickup", function(boolean)
+resetOnDeath.AutoPickUp = trinketSettingsSection:createToggle("Auto Pickup", function(boolean)
     if boolean then
         connections.trinketEvent = RunService.Heartbeat:Connect(function()
             for i,v in pairs(workspace.MouseIgnore:GetChildren()) do
@@ -196,7 +291,9 @@ local AutoPickUp = trinketSettingsSection:createToggle("Auto Pickup", function(b
             end
         end)
     else
-        connections.trinketEvent:Disconnect()
+        if connections.trinketEvent then
+            connections.trinketEvent:Disconnect()
+        end
     end
 end)
 
@@ -263,18 +360,6 @@ local function createToolViewer(character)
         end)
     end
 end
-
-game.Workspace.Alive.ChildAdded:Connect(function(child)
-    if settings.viewHealthBars then
-        createHealthBar(child)
-    end
-    if settings.viewManaBars then
-        createManaBar(child)
-    end
-    if settings.viewTools then
-        createToolViewer(child)
-    end
-end)
 
 local healthBars = visualCombatSection:createToggle("Health Bars", function(boolean)
     if boolean then
@@ -351,6 +436,68 @@ local viewTools = visualCombatSection:createToggle("View Tools", function(boolea
     end
 end)
 
+local miscTab = screenGUI:createTab("http://www.roblox.com/asset/?id=9865755786")
+
+local visualMiscSection = miscTab:createSection("Visuals")
+local logger
+local dragChanged
+local dragEnded
+local windowFocused
+
+local function makeLogText(player, chat)
+    local text = Assets.TextLabel:Clone()
+    text.Text = player.."["..player.Data.oName.."]:"..chat
+    text.Parent = logger.Menu.Body.Holder
+    logger.Menu.Body.Holder.CanvasSize = UDim2.new(0, 0, 0, logger.Menu.Body.Holder.UIListLayout.AbsoluteContentSize + 5)
+    logger.Menu.Body.Holder.CanvasPosition = Vector2.new(0, math.huge)
+end
+
+local chatLogger = visualMiscSection:createToggle("Chat Logger", function(boolean)
+    if boolean then
+        logger = Assets.ChatLogger:Clone()
+        getParent(logger)
+
+        logger.Menu.TopBar.MouseButton1Down:Connect(function(x, y)
+            local dragStart = Vector3.new(x, y, 0)
+            local menuStart = logger.Menu.Position
+            dragChanged = UserInputService.InputChanged:Connect(function(inputObject, gameProcessed)
+                windowFocused = UserInputService.WindowFocused:Connect(function()
+                    dragChanged:Disconnect()
+                    dragEnded:Disconnect()
+                    windowFocused:Disconnect()
+                end)
+                if inputObject.UserInputType == Enum.UserInputType.MouseMovement then
+                    local delta = inputObject.Position - dragStart
+                    logger.Menu.Position = UDim2.new(menuStart.X.Scale, menuStart.X.Offset + delta.X, menuStart.Y.Scale, menuStart.Y.Offset + delta.Y + 35)
+                end
+            end)
+            
+            dragEnded = UserInputService.InputEnded:Connect(function(inputObject)
+                if inputObject.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragChanged:Disconnect()
+                    dragEnded:Disconnect()
+                    windowFocused:Disconnect()
+                end
+            end)
+        end)
+
+        for i,v in pairs(game.Players:GetChildren()) do
+            if v ~= player then
+                connections.chatLogger[#connections.chatLogger + 1] = v.Chatted:Connect(function(chat)
+                    makeLogText(v, chat)
+                end)
+            end
+        end
+    else
+        logger:Destroy()
+        for i,v in pairs(connections.chatLogger) do
+            if v.Connected then
+                v:Disconnect()
+            end
+            connections.chatLogger[i] = nil
+        end
+    end
+end)
 
 --leaderboard viewer
 local currentHover = {}
@@ -402,3 +549,29 @@ local function spectate(actionName, inputState, inputObject)
 end
 
 ContextActionService:BindAction("Spectate", spectate, false, Enum.UserInputType.MouseButton1)
+
+game.Workspace.Alive.ChildAdded:Connect(function(child)
+    if child ~= player.Character then
+        if settings.viewHealthBars then
+            createHealthBar(child)
+        end
+        if settings.viewManaBars then
+            createManaBar(child)
+        end
+        if settings.viewTools then
+            createToolViewer(child)
+        end
+    elseif child == player.Character then
+        for i,v in pairs(resetOnDeath) do
+            v:setToggle(false)
+        end
+    end
+end)
+
+game.Players.PlayerAdded:Connect(function(player)
+    if settings.chatLogger then
+        connections.chatLogger[#connections.chatLogger + 1] = player.Chatted:Connect(function(chat)
+            makeLogText(player, chat)
+        end)
+    end
+end)
