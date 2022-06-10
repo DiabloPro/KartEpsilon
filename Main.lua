@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 local HttpService = game:GetService("HttpService")
+local NotificationService = game:GetService("NotificationService")
 local Assets = game:GetObjects("rbxassetid://9839966208")[1]
 
 local screenGUI = Library.init("Kart's Epsilon 2")
@@ -45,7 +46,8 @@ local spellPrecentages = {
 }
 
 local defaultSettings = {
-    speedBind = nil
+    speedBind = nil,
+    modNotifier = nil
 }
 
 local savedSettings = {}
@@ -60,7 +62,6 @@ local settingsMT = setmetatable(savedSettings,{
     __newindex = function(self, key, value)
         rawset(self, key, value)
         if writefile then
-            print("saving")
             writefile("KartEpsilon.txt", HttpService:JSONEncode(savedSettings))
         end
     end,
@@ -446,10 +447,12 @@ local windowFocused
 
 local function makeLogText(player, chat)
     local text = Assets.TextLabel:Clone()
-    text.Text = player.."["..player.Data.oName.."]:"..chat
+    text.Text = player.Name.."["..player.Data.oName.Value.."]:"..chat
     text.Parent = logger.Menu.Body.Holder
-    logger.Menu.Body.Holder.CanvasSize = UDim2.new(0, 0, 0, logger.Menu.Body.Holder.UIListLayout.AbsoluteContentSize + 5)
-    logger.Menu.Body.Holder.CanvasPosition = Vector2.new(0, math.huge)
+    logger.Menu.Body.Holder.CanvasSize = UDim2.new(0, 0, 0, logger.Menu.Body.Holder.UIListLayout.AbsoluteContentSize.Y + 5)
+    if math.abs(logger.Menu.Body.Holder.AbsoluteCanvasSize.Y - logger.Menu.Body.Holder.AbsoluteSize.Y - 30) - math.abs(logger.Menu.Body.Holder.CanvasPosition.Y) <= 5 then
+        logger.Menu.Body.Holder.CanvasPosition = Vector2.new(0, logger.Menu.Body.Holder.AbsoluteCanvasSize.Y)
+    end
 end
 
 local chatLogger = visualMiscSection:createToggle("Chat Logger", function(boolean)
@@ -457,7 +460,7 @@ local chatLogger = visualMiscSection:createToggle("Chat Logger", function(boolea
         logger = Assets.ChatLogger:Clone()
         getParent(logger)
 
-        logger.Menu.TopBar.MouseButton1Down:Connect(function(x, y)
+        logger.Menu.TopBar.Drag.MouseButton1Down:Connect(function(x, y)
             local dragStart = Vector3.new(x, y, 0)
             local menuStart = logger.Menu.Position
             dragChanged = UserInputService.InputChanged:Connect(function(inputObject, gameProcessed)
@@ -495,6 +498,24 @@ local chatLogger = visualMiscSection:createToggle("Chat Logger", function(boolea
                 v:Disconnect()
             end
             connections.chatLogger[i] = nil
+        end
+    end
+end)
+
+local modNotifier = visualMiscSection:createToggle("Mod Notifier", function(boolean)
+    savedSettings.modNotifier = boolean
+    if boolean then
+        for i,v in pairs(game.Players:GetChildren()) do
+            local role = v:GetRoleInGroup(12832629)
+            if role ~= "Member" then
+                game.StarterGui:SetCore("SendNotification",{
+                    Title = role.." in server",
+                    Text = v.Name,
+                    Icon = game.Players:GetUserThumbnailAsync(v.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150),
+                    Duration = math.huge,
+                    Button1 = "Ok"
+                })
+            end
         end
     end
 end)
@@ -540,9 +561,11 @@ local function spectate(actionName, inputState, inputObject)
         if spectatePlayer and spectatePlayer.Character then
             if spectatePlayer.Character:FindFirstChild("Humanoid") then
                 workspace.CurrentCamera.CameraSubject = spectatePlayer.Character.Humanoid
+                currentHover = {}
             end
         end
     elseif inputState == Enum.UserInputState.Begin and not currentHover[1] then
+        currentHover = {}
         workspace.CurrentCamera.CameraSubject = player.Character.Humanoid
     end
     return Enum.ContextActionResult.Pass
@@ -573,5 +596,17 @@ game.Players.PlayerAdded:Connect(function(player)
         connections.chatLogger[#connections.chatLogger + 1] = player.Chatted:Connect(function(chat)
             makeLogText(player, chat)
         end)
+    end
+    if savedSettings.modNotifier then
+        local role = player:GetRoleInGroup(12832629)
+        if role ~= "Member" then
+            game.StarterGui:SetCore("SendNotification",{
+                Title = role.." joined server",
+                Text = player.Name,
+                Icon = game.Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150),
+                Duration = math.huge,
+                Button1 = "Ok"
+            })
+        end
     end
 end)
