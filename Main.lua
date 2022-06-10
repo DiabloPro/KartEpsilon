@@ -614,3 +614,18 @@ game.Players.PlayerAdded:Connect(function(player)
         end
     end
 end)
+
+game.Players.PlayerRemoving:Connect(function(player)
+    if savedSettings.modNotifier then
+        local role = player:GetRoleInGroup(12832629)
+        if role ~= "Member" then
+            game.StarterGui:SetCore("SendNotification",{
+                Title = role.." leaving server",
+                Text = player.Name,
+                Icon = game.Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150),
+                Duration = math.huge,
+                Button1 = "Ok"
+            })
+        end
+    end
+end)
