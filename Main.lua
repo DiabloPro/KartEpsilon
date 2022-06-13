@@ -718,11 +718,11 @@ local function farmCR()
                 end
                 if tool then
                     local skip = false
-                    local time = os.clock() + 2
+                    local time = os.clock() + 3
                     keypress(0x47)
                     while player.Character.Stats.Mana.Value < 95 do
                         task.wait()
-                        if time - os.clock() then
+                        if time - os.clock() <= 0 then
                             skip = true
                             break
                         end
@@ -804,6 +804,7 @@ crstartFunction.OnInvoke = startCR
 local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
     if not player.Character then
         getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
+        player.CharacterAdded:Wait()
     end
     if boolean then
         if not savedSettings.crFarm then
