@@ -599,7 +599,7 @@ local function serverHop()
             savedSettings.visitedServers = {}
             savedSettings.visitedCreated = os.time() + 300
         end
-        if savedSettings.visitedCreated - os.time <= 0 then
+        if savedSettings.visitedCreated - os.time() <= 0 then
             savedSettings.visitedServers = {}
             savedSettings.visitedCreated = os.time() + 300
         end
