@@ -597,6 +597,11 @@ local function serverHop()
     if writefile then
         if not savedSettings.visitedServers then
             savedSettings.visitedServers = {}
+            savedSettings.visitedCreated = os.time() + 300
+        end
+        if savedSettings.visitedCreated - os.time <= 0 then
+            savedSettings.visitedServers = {}
+            savedSettings.visitedCreated = os.time() + 300
         end
         table.insert(savedSettings.visitedServers, game.JobId)
         local JobId = game.JobId
