@@ -769,37 +769,40 @@ local function farmCR()
     end)
 end
 
-local function startCR()
-    screenGUI:Hide()
-    savedSettings.crFarm = true
-    float(true)
-    noClip()
-    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, -40, 0)
-    destroyKillBricks()
-    game.StarterGui:SetCore("SendNotification",{
-        Title = "Castle Rock Auto Farm",
-        Text = "Do you want to stop?",
-        Duration = math.huge,
-        Callback = crFunction,
-        Button1 = "Yes"
-    })
-    if not UserSettings().GameSettings:InFullScreen() then
-        GuiService:ToggleFullscreen()
-    end
-    local mod = false
-    for i,v in pairs(game.Players:GetChildren()) do
-        if v:IsInGroup(12832629) then
-            local role = v:GetRoleInGroup(12832629)
-            if role ~= "Member" then
-                mod = true
-                game.Players.LocalPlayer:Kick(role.." found hopping")
-                task.wait(1)
-                serverHop()
+local function startCR(option)
+    if option == "Ok" then
+        screenGUI:Hide()
+        savedSettings.crFarm = true
+        player.Character.FallDamage.Disabled = true
+        float(true)
+        noClip()
+        player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, -40, 0)
+        destroyKillBricks()
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Castle Rock Auto Farm",
+            Text = "Do you want to stop?",
+            Duration = math.huge,
+            Callback = crFunction,
+            Button1 = "Yes"
+        })
+        if not UserSettings().GameSettings:InFullScreen() then
+            GuiService:ToggleFullscreen()
+        end
+        local mod = false
+        for i,v in pairs(game.Players:GetChildren()) do
+            if v:IsInGroup(12832629) then
+                local role = v:GetRoleInGroup(12832629)
+                if role ~= "Member" then
+                    mod = true
+                    game.Players.LocalPlayer:Kick(role.." found hopping")
+                    task.wait(1)
+                    serverHop()
+                end
             end
         end
-    end
-    if not mod then
-        farmCR()
+        if not mod then
+            farmCR()
+        end
     end
 end
 
@@ -823,7 +826,8 @@ local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
                 Text = "Keep window fullscreen and roblox focused(press ok to continue)",
                 Duration = math.huge,
                 Callback = crstartFunction,
-                Button1 = "Ok"
+                Button1 = "Ok",
+                Button2 = "No"
             })
         elseif savedSettings.crFarm then
             startCR()
