@@ -723,7 +723,7 @@ local function farmCR()
                 end
                 if tool then
                     local skip = false
-                    local time = os.clock() + 5
+                    local time = os.clock() + 10
                     keypress(0x47)
                     while player.Character.Stats.Mana.Value < 95 do
                         task.wait()
@@ -812,8 +812,10 @@ crstartFunction.OnInvoke = startCR
 
 local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
     if not workspace.Alive:FindFirstChild(player.Name) then
-        if not game:IsLoaded() then
-            game.Loaded:Wait()
+        if not player.PlayerGui:FindFirstChild("StartMenu") then
+            while not player.PlayerGui:FindFirstChild("StartMenu") do
+                task.wait()
+            end
         end
         getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
         while not workspace.Alive:FindFirstChild(player.Name) do
