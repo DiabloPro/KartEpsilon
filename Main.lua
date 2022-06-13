@@ -772,6 +772,7 @@ end
 local function startCR(option)
     if option == "Ok" then
         screenGUI:Hide()
+        savedSettings.Hop = os.clock + 20
         savedSettings.crFarm = true
         player.Character.FallDamage.Disabled = true
         float(true)
@@ -843,8 +844,12 @@ local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
     end
 end)
 if savedSettings.crFarm then
-    if savedSettings.Hop - os.clock() <= 0 then
-        savedSettings.crFarm = false
+    if savedSettings.Hop then
+        if savedSettings.Hop - os.clock() <= 0 then
+            savedSettings.crFarm = false
+        else
+            crFarm:setToggle(savedSettings.crFarm)
+        end
     else
         crFarm:setToggle(savedSettings.crFarm)
     end
