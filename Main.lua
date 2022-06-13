@@ -734,6 +734,7 @@ local function farmCR()
                     end
                     if not skip then
                         keyrelease(0x47)
+                        task.wait()
                         keypress(0x46)
                     end
                 end
@@ -817,7 +818,12 @@ local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
                 task.wait()
             end
         end
-        getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
+        while player.PlayerGui:FindFirstChild("StartMenu") do
+            task.wait()
+            if #getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down) > 0 then
+                getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
+            end
+        end
         while not workspace.Alive:FindFirstChild(player.Name) do
             task.wait()
         end
