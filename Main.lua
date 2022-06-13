@@ -830,7 +830,7 @@ local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
                 Button2 = "No"
             })
         elseif savedSettings.crFarm then
-            startCR()
+            startCR("Ok")
         end
     else
         if savedSettings.crFarm then
