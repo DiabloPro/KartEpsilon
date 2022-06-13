@@ -624,14 +624,11 @@ local function serverHop()
                 end
             end
         end
+        savedSettings.Hop = os.time() + 20
         if syn then
             syn.queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/DiabloPro/KartEpsilon/main/Main.lua'))()")
         elseif queue_on_teleport then
             queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/DiabloPro/KartEpsilon/main/Main.lua'))()")
-        end
-    else
-        for i,v in pairs(servers.data) do
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
         end
     end
 end
@@ -846,7 +843,11 @@ local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
     end
 end)
 if savedSettings.crFarm then
-    crFarm:setToggle(savedSettings.crFarm)
+    if savedSettings.Hop - os.clock() <= 0 then
+        savedSettings.crFarm = false
+    else
+        crFarm:setToggle(savedSettings.crFarm)
+    end
 end
 
 -- [[ Combat Tab ]]
