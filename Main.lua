@@ -802,7 +802,10 @@ local crstartFunction = Instance.new("BindableFunction")
 crstartFunction.OnInvoke = startCR
 
 local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
-    if not player.Character then
+    if not workspace.Alive:FindFirstChild(player.Name) then
+        if not game:IsLoaded() then
+            game.Loaded:Wait()
+        end
         getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
         while not workspace.Alive:FindFirstChild(player.Name) do
             task.wait()
