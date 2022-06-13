@@ -784,15 +784,15 @@ local function startCR()
     local mod = false
     for i,v in pairs(game.Players:GetChildren()) do
         if v:IsInGroup(12832629) then
-                local role = v:GetRoleInGroup(12832629)
-                if role ~= "Member" then
-                    mod = true
-                    game.Players.LocalPlayer:Kick(role.." found hopping")
-                    task.wait(1)
-                    serverHop()
-                end
+            local role = v:GetRoleInGroup(12832629)
+            if role ~= "Member" then
+                mod = true
+                game.Players.LocalPlayer:Kick(role.." found hopping")
+                task.wait(1)
+                serverHop()
             end
         end
+    end
     if not mod then
         farmCR()
     end
@@ -804,7 +804,9 @@ crstartFunction.OnInvoke = startCR
 local crFarm = autoFarmSection:createToggle("Castle Rock", function(boolean)
     if not player.Character then
         getconnections(player.PlayerGui.StartMenu.Choices.Play.MouseButton1Down)[1]:Fire()
-        player.CharacterAdded:Wait()
+        while not workspace.Alive:FindFirstChild(player.Name) do
+            task.wait()
+        end
     end
     if boolean then
         if not savedSettings.crFarm then
