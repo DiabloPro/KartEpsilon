@@ -607,7 +607,7 @@ local function serverHop()
         local JobId = game.JobId
         local serverFound = false
         for i,v in pairs(servers.data) do
-            if not table.find(savedSettings.visitedServers, v.id) then
+            if not table.find(savedSettings.visitedServers, v.id) and v.playing >= v.maxPlayers then
                 serverFound = true
                 TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
             end
@@ -616,7 +616,7 @@ local function serverHop()
             savedSettings.visitedServers = {}
             table.insert(savedSettings.visitedServers, game.JobId)
             for i,v in pairs(servers.data) do
-                if not table.find(savedSettings.visitedServers, v.id) then
+                if not table.find(savedSettings.visitedServers, v.id) and v.playing >= v.maxPlayers then
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
                 end
             end
@@ -723,7 +723,7 @@ local function farmCR()
                 end
                 if tool then
                     local skip = false
-                    local time = os.clock() + 3
+                    local time = os.clock() + 5
                     keypress(0x47)
                     while player.Character.Stats.Mana.Value < 95 do
                         task.wait()
