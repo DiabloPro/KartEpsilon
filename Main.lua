@@ -772,7 +772,7 @@ end
 local function startCR(option)
     if option == "Ok" then
         screenGUI:Hide()
-        savedSettings.Hop = os.clock + 20
+        savedSettings.Hop = os.clock() + 20
         savedSettings.crFarm = true
         player.Character.FallDamage.Disabled = true
         float(true)
