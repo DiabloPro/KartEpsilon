@@ -593,8 +593,8 @@ local function destroyKillBricks()
 end
 
 local function serverHop()
-    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/9530846958/servers/Public?sortOrder=Asc&limit=100"))
     if writefile then
+        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/9530846958/servers/Public?sortOrder=Asc&limit=100"))
         if not savedSettings.visitedServers then
             savedSettings.visitedServers = {}
         end
@@ -609,7 +609,7 @@ local function serverHop()
         local JobId = game.JobId
         local serverFound = false
         for i,v in pairs(servers.data) do
-            if not table.find(savedSettings.visitedServers, v.id) and v.playing >= v.maxPlayers then
+            if not table.find(savedSettings.visitedServers, v.id) and v.playing <= v.maxPlayers then
                 serverFound = true
                 TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
             end
@@ -619,7 +619,7 @@ local function serverHop()
             savedSettings.visitedCreated = os.time() + 300
             table.insert(savedSettings.visitedServers, game.JobId)
             for i,v in pairs(servers.data) do
-                if not table.find(savedSettings.visitedServers, v.id) and v.playing >= v.maxPlayers then
+                if not table.find(savedSettings.visitedServers, v.id) and v.playing <= v.maxPlayers then
                     TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
                 end
             end
