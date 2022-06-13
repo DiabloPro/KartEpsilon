@@ -597,6 +597,8 @@ local function serverHop()
     if writefile then
         if not savedSettings.visitedServers then
             savedSettings.visitedServers = {}
+        end
+        if not savedSettings.visitedCreated then
             savedSettings.visitedCreated = os.time() + 300
         end
         if savedSettings.visitedCreated - os.time() <= 0 then
@@ -614,6 +616,7 @@ local function serverHop()
         end
         if not serverFound then
             savedSettings.visitedServers = {}
+            savedSettings.visitedCreated = os.time() + 300
             table.insert(savedSettings.visitedServers, game.JobId)
             for i,v in pairs(servers.data) do
                 if not table.find(savedSettings.visitedServers, v.id) and v.playing >= v.maxPlayers then
