@@ -145,6 +145,7 @@ resetOnDeath.jumpHeight = localPlayerSection:createToggle("Jump Height", functio
        player.Character.Humanoid.JumpPower = 50
     end
 end)
+
 resetOnDeath.jumpHeight:createSlider({0, 250}, settings.jumpPower, false, function(value)
     settings.jumpPower = value
     if settings.jumpHeight then
@@ -153,6 +154,7 @@ resetOnDeath.jumpHeight:createSlider({0, 250}, settings.jumpPower, false, functi
         player.Character.Humanoid.JumpPower = 50
     end
 end)
+
 resetOnDeath.jumpHeight:createBind(function(bind)
     savedSettings.jumpHeight = bind
 end)
@@ -213,6 +215,7 @@ resetOnDeath.float = localPlayerSection:createToggle("Float", function(boolean)
         end
     end
 end)
+
 local noclip 
 local function noClip()
     noclip = RunService.Stepped:Connect(function()
@@ -862,6 +865,24 @@ if savedSettings.crFarm then
         crFarm:setToggle(savedSettings.crFarm)
     end
 end
+
+local auto
+resetOnDeath.autoArti = autoFarmSection:createToggle("Roll Artifacts", function(bool)
+    if bool then
+        auto = RunService.Heartbeat:Connect(function() 
+            if player.Data.Silver.Value > 15000 then
+                game:GetService("ReplicatedStorage").RerollArtifact:FireServer()
+            else
+                resetOnDeath.autoArti:setToggle(false)
+                auto:Disconnect()
+            end
+        end)
+    else
+        if auto then
+            auto:Disconnect()
+        end
+    end
+end)
 
 -- [[ Combat Tab ]]
 
