@@ -250,7 +250,7 @@ end)
 resetOnDeath.noFire = statusSection:createToggle("No Fire", function(boolean)
     if boolean then
         connections.noFire = game.Workspace.AliveData[player.Name].Status.ChildAdded:Connect(function(child)
-            if child.Name == "Burn" then
+            if child.Name == "Burn" or child.Name == "WhiteBurn" or child.Name == "PurpleBurn" then
                 game.Players.LocalPlayer.Backpack.Roll.Dash:FireServer("backward")
             end
         end)
@@ -309,104 +309,6 @@ local fullBright = localPlayerVisuals:createToggle("Full Bright", function(boole
         game.Lighting.Ambient = Color3.fromRGB(255,255,255)
     else
         game.Lighting.Ambient = Color3.fromRGB(20,20,20)
-    end
-end)
-
--- Mana Section
-
-local manaSection = humanoidTab:createSection("Mana")
-local manaHelpGuis = {}
-local manaScreenGui
-local manaGui
-
-resetOnDeath.manaPrecentage = manaSection:createToggle("Mana Precentage", function(boolean)
-    if boolean then
-        manaGui = Instance.new("ScreenGui")
-        getParent(manaGui)
-        local textLabel = Instance.new("TextLabel")
-        textLabel.BackgroundTransparency = 1
-        textLabel.Font = Enum.Font.SourceSansLight
-        textLabel.TextSize = 20
-        textLabel.Size = UDim2.new(0, 20, 0, 20)
-        textLabel.Parent = manaGui
-        textLabel.TextColor3 = Color3.fromRGB(255,255,255)
-        textLabel.TextStrokeTransparency = .9
-        textLabel.Position = player.PlayerGui.ManaGui.LeftContainer.Position + UDim2.new(0,26,0,-178)
-        textLabel.AnchorPoint = player.PlayerGui.ManaGui.LeftContainer.AnchorPoint
-        textLabel.Text = math.floor(player.Character.Stats.Mana.Value).."%"
-        connections.manaPrecent = player.Character.Stats.Mana.Changed:Connect(function(newValue)
-            manaGui.TextLabel.Text = math.floor(newValue).."%"
-        end)
-    else
-        if manaGui then
-            connections.manaPrecent:Disconnect()
-            manaGui:Destroy()
-        end
-    end
-end)
-
-local function CreateManaBarSection(Tool)
-    local Normal = Instance.new("Frame")
-    table.insert(manaHelpGuis, Normal)
-    Normal.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Normal[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
-    Normal.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
-    Normal.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
-    Normal.BackgroundTransparency = 0.7
-    Normal.AnchorPoint = Vector2.new(0,1)
-    Normal.BorderSizePixel = 0
-    Normal.Parent = manaScreenGui
-    if spellPrecentages[Tool].Snap then
-        local Snap = Instance.new("Frame")
-        table.insert(manaHelpGuis, Snap)
-        Snap.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Snap[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
-        Snap.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
-        Snap.BackgroundColor3 = Color3.fromRGB(255,0,0)
-        Snap.BackgroundTransparency = 0.7
-        Snap.AnchorPoint = Vector2.new(0,1)
-        Snap.BorderSizePixel = 0
-        Snap.Parent = manaScreenGui
-    end
-end
-
-resetOnDeath.manaHelp = manaSection:createToggle("Mana Helper", function(boolean)
-    if boolean then
-        manaScreenGui = Instance.new("ScreenGui")
-        getParent(manaScreenGui)
-        local tool = player.Character:FindFirstChildWhichIsA("Tool")
-        if tool then
-            if spellPrecentages[tool.Name] then
-                CreateManaBarSection(tool.Name)
-            end
-        end
-        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildAdded:Connect(function(child)
-            if child:IsA("Tool") and  spellPrecentages[child.Name] then
-                for i,v in pairs(manaHelpGuis) do
-                    v:Destroy()
-                end
-                CreateManaBarSection(child.Name)
-            end
-        end)
-
-        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildRemoved:Connect(function(child)
-            if child:IsA("Tool") then
-                for i,v in pairs(manaHelpGuis) do
-                    v:Destroy()
-                end
-            end
-        end)
-    else
-        if manaScreenGui then
-            manaScreenGui:Destroy()
-        end
-        for i,v in pairs(manaHelpGuis) do
-            v:Destroy()
-        end
-        for i,v in pairs(connections.manaHelp) do
-            if v.Connected then
-                v:Disconnect()
-            end
-            connections.manaHelp[i] = nil
-        end
     end
 end)
 
@@ -737,7 +639,6 @@ local function farmCR()
                     end
                     if not skip then
                         keyrelease(0x47)
-                        task.wait()
                         keypress(0x46)
                     end
                 end
@@ -1050,6 +951,167 @@ local ESPToggle = visualCombatSection:createToggle("ESP", function(boolean)
         end
     end
 end)
+
+-- Mana Section
+
+local manaSection = combatTab:createSection("Mana")
+local manaHelpGuis = {}
+local manaScreenGui
+local manaGui
+
+resetOnDeath.manaPrecentage = manaSection:createToggle("Mana Precentage", function(boolean)
+    if boolean then
+        manaGui = Instance.new("ScreenGui")
+        getParent(manaGui)
+        local textLabel = Instance.new("TextLabel")
+        textLabel.BackgroundTransparency = 1
+        textLabel.Font = Enum.Font.SourceSansLight
+        textLabel.TextSize = 20
+        textLabel.Size = UDim2.new(0, 20, 0, 20)
+        textLabel.Parent = manaGui
+        textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        textLabel.TextStrokeTransparency = .9
+        textLabel.Position = player.PlayerGui.ManaGui.LeftContainer.Position + UDim2.new(0,26,0,-178)
+        textLabel.AnchorPoint = player.PlayerGui.ManaGui.LeftContainer.AnchorPoint
+        textLabel.Text = math.floor(player.Character.Stats.Mana.Value).."%"
+        connections.manaPrecent = player.Character.Stats.Mana.Changed:Connect(function(newValue)
+            manaGui.TextLabel.Text = math.floor(newValue).."%"
+        end)
+    else
+        if manaGui then
+            connections.manaPrecent:Disconnect()
+            manaGui:Destroy()
+        end
+    end
+end)
+
+local function CreateManaBarSection(Tool)
+    local Normal = Instance.new("Frame")
+    table.insert(manaHelpGuis, Normal)
+    Normal.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Normal[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+    Normal.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Normal[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+    Normal.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+    Normal.BackgroundTransparency = 0.7
+    Normal.AnchorPoint = Vector2.new(0,1)
+    Normal.BorderSizePixel = 0
+    Normal.Parent = manaScreenGui
+    if spellPrecentages[Tool].Snap then
+        local Snap = Instance.new("Frame")
+        table.insert(manaHelpGuis, Snap)
+        Snap.Size = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.X, 0, (spellPrecentages[Tool].Snap[2] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+        Snap.Position = UDim2.new(0,player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.X, 0, (player.PlayerGui.ManaGui.LeftContainer.Mana.AbsolutePosition.Y + player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y) - (spellPrecentages[Tool].Snap[1] * player.PlayerGui.ManaGui.LeftContainer.Mana.AbsoluteSize.Y))
+        Snap.BackgroundColor3 = Color3.fromRGB(255,0,0)
+        Snap.BackgroundTransparency = 0.7
+        Snap.AnchorPoint = Vector2.new(0,1)
+        Snap.BorderSizePixel = 0
+        Snap.Parent = manaScreenGui
+    end
+end
+
+resetOnDeath.manaHelp = manaSection:createToggle("Mana Helper", function(boolean)
+    if boolean then
+        manaScreenGui = Instance.new("ScreenGui")
+        getParent(manaScreenGui)
+        local tool = player.Character:FindFirstChildWhichIsA("Tool")
+        if tool then
+            if spellPrecentages[tool.Name] then
+                CreateManaBarSection(tool.Name)
+            end
+        end
+        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildAdded:Connect(function(child)
+            if child:IsA("Tool") and  spellPrecentages[child.Name] then
+                for i,v in pairs(manaHelpGuis) do
+                    v:Destroy()
+                end
+                CreateManaBarSection(child.Name)
+            end
+        end)
+
+        connections.manaHelp[#connections.manaHelp + 1] = player.Character.ChildRemoved:Connect(function(child)
+            if child:IsA("Tool") then
+                for i,v in pairs(manaHelpGuis) do
+                    v:Destroy()
+                end
+            end
+        end)
+    else
+        if manaScreenGui then
+            manaScreenGui:Destroy()
+        end
+        for i,v in pairs(manaHelpGuis) do
+            v:Destroy()
+        end
+        for i,v in pairs(connections.manaHelp) do
+            if v.Connected then
+                v:Disconnect()
+            end
+            connections.manaHelp[i] = nil
+        end
+    end
+end)
+
+-- rage section
+
+local rageSection = combatTab:createSection("Rage")
+local currentTarget
+local humanoidWhiteList = RaycastParams.new()
+humanoidWhiteList.FilterType = Enum.RaycastFilterType.Whitelist
+humanoidWhiteList.FilterDescendantsInstances = {workspace.Alive}
+
+resetOnDeath.backStab = rageSection:createToggle("Back Stab", function(boolean)
+    if not currentTarget and boolean then
+        local mouse = player:GetMouse()
+        local unitRay = workspace.CurrentCamera:ScreenPointToRay(mouse.X, mouse.Y)
+        local rayResult = workspace:Raycast(unitRay.Origin, unitRay.Direction * 500, humanoidWhiteList)
+        if rayResult then
+            local parent = rayResult.Instance
+            while true do
+                parent = parent.Parent
+
+                if parent.Parent == workspace.Alive then
+                    break
+                end
+            end
+            if parent ~= player.Character then
+                if (player.Character.HumanoidRootPart.Position - parent.HumanoidRootPart.Position).Magnitude <= 50 then
+                    parent.Humanoid.Died:Connect(function()
+                        currentTarget:Disconnect()
+                        currentTarget = nil
+                        resetOnDeath.backStab:setToggle(false)
+                    end)
+
+                    currentTarget = RunService.Heartbeat:Connect(function()
+                        if (player.Character.HumanoidRootPart.Position - parent.HumanoidRootPart.Position).Magnitude <= 50 then
+                            player.Character.HumanoidRootPart.CFrame = parent.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+                        else
+                            currentTarget:Disconnect()
+                            currentTarget = nil
+                            resetOnDeath.backStab:setToggle(false)
+                        end
+                    end)
+                end
+            end
+            if not currentTarget then
+                resetOnDeath.backStab:setToggle(false)
+            end
+        else
+            resetOnDeath.backStab:setToggle(false)
+        end
+    else
+        if currentTarget then
+            currentTarget:Disconnect()
+            currentTarget = nil
+        end
+    end
+end)
+
+resetOnDeath.backStab:createBind(function(bind)
+    savedSettings.backStab = bind
+end)
+
+if savedSettings.backStab then
+    resetOnDeath.backStab:setBind(savedSettings.backStab)
+end
 
 -- [[ Misc Tab ]]
 
