@@ -37,6 +37,8 @@ local connections = {
     chatLogger = {},
     noFire = nil,
     jumpHeight = nil,
+    esp = {},
+    FallDamage = nil,
 }
 local spellPrecentages = {
     Gate = {Normal = {.50, .80}},
@@ -931,7 +933,11 @@ local function createEsp(character)
     getParent(espGui)
     espGuis[#espGuis + 1] = espGui
     espGui.Adornee = character.Torso
-    espGui.Frame.Text = character.Name.."["..game.Players:GetPlayerFromCharacter(character).Data.oName.Value.."]"
+    local espPlayer = game.Players:GetPlayerFromCharacter(character)
+    espGui.Frame.Text = character.Name.."["..espPlayer.Data.oName.Value.."]["..espPlayer.Data.Class.Value.."]"
+    connections.esp[#connections.esp + 1] = espPlayer.Data.Class.Changed:Connect(function()
+        espGui.Frame.Text = character.Name.."["..espPlayer.Data.oName.Value.."]["..espPlayer.Data.Class.Value.."]"
+    end)
 end
 
 local ESPToggle = visualCombatSection:createToggle("ESP", function(boolean)
